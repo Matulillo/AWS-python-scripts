@@ -114,10 +114,16 @@ def creates_snapshots(project):
     "Creates snapshots for EC2 instances"
     instances = filter_instances(project)
     for i in instances:
+        print("Stopping {0}...".format(i.id))
+        i.stop()
+        i.wait_until_stopped()
         for v in i.volumes.all():
             print("Creating snapshot of {0}.format(v.id)")
             v.create_snapshot(Description="Created by ec2_manager script")
-        
+        print("Starting {0}...".format(i.id))
+        i.start()
+        i.wait_until_running()
+    print('Job done!!')
     return 
 
 if __name__ == '__main__':
