@@ -87,7 +87,8 @@ def list_instances(project):
         print(', '.join((
             i.id,
             i.instance_type,
-            i.public_ip_address,
+            if ip.public_ip_address: 
+                i.public_ip_address
             i.placement['AvailabilityZone'],
             i.state['Name'],
             tags.get('Project', '<no project>'),
