@@ -90,7 +90,8 @@ def list_instances(project):
             i.placement['AvailabilityZone'],
             i.state['Name'],
             tags.get('Project', '<no project>'),
-            tags.get('Name')
+            tags.get('Name'),
+            i.public_ip_address
         )))
     return 
 
