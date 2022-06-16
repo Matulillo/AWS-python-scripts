@@ -7,15 +7,24 @@ session = boto3.Session(profile_name='default')
 ec2 = session.resource('ec2')
 
 
-def filter_instances(project):
+def filter_instances(project, name):
     instances =[]
 
-    if project:
+    if project and name:
         filter = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filter)
+        filter = [{'Name':'tag:Name', 'Values':[name]}]
+        instances = ec2.instances.filter(Filters=filter)
+    elif project:
+        filter = [{'Name':'tag:Project', 'Values':[project]}]
+        instances = ec2.instances.filter(Filters=filter)
+    elif name:
+        filter = [{'Name':'tag:Name', 'Values':[name]}]
         instances = ec2.instances.filter(Filters=filter)
     else:
         instances = ec2.instances.all()
     return instances
+
 
 def has_pending_snapshot(volume):
     snapshots = list(volume.snapshots.all())
@@ -33,9 +42,11 @@ def volumes():
 
 @volumes.command('list')
 @click.option('--project', default=None, help="Only volumes for project (tag Project:<name>)")
-def list_volumes(project):
+@click.option('--name', default=None, help="Only volumes for name (tag Name:<name>)")
+def list_volumes(project, name):
     "List EC2 volumes"
-    instances = filter_instances(project)
+    instances = filter_instances(project,name)
+   
     for i in instances:
         for v in i.volumes.all():
             print(", ".join((
@@ -54,10 +65,11 @@ def snapshots():
 
 @snapshots.command('list')
 @click.option('--project', default=None, help="Only snapshots for project (tag Project:<name>)")
+@click.option('--name', default=None, help="Only volumes for name (tag Name:<name>)")
 @click.option('--all', 'list_all', default=False, is_flag=True, help= "List all snapshots for each volume not only the most recent")
-def list_snapshots(project, list_all):
+def list_snapshots(project, name, list_all):
     "List EC2 snapshots"
-    instances = filter_instances(project)
+    instances = filter_instances(project, name)
     for i in instances:
         for v in i.volumes.all():
             for s in v.snapshots.all():
@@ -79,9 +91,10 @@ def instances():
 
 @instances.command('list')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def list_instances(project):
+@click.option('--name', default=None, help="Only volumes for name (tag Name:<name>)")
+def list_instances(project, name):
     "List EC2 instances"
-    instances = filter_instances(project)
+    instances = filter_instances(project, name)
     for i in instances:
         tags = {t['Key']: t['Value'] for t in i.tags or []}
         print(', '.join((
@@ -98,9 +111,10 @@ def list_instances(project):
 
 @instances.command('stop')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def stop_instances(project):
+@click.option('--name', default=None, help="Only volumes for name (tag Name:<name>)")
+def stop_instances(project, name):
     "Stop EC2 instances"
-    instances = filter_instances(project)
+    instances = filter_instances(project, name)
     for i in instances:
         print("Stopping {0}...".format(i.id))
         try:
@@ -112,9 +126,10 @@ def stop_instances(project):
 
 @instances.command('start')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def start_instances(project):
+@click.option('--name', default=None, help="Only volumes for name (tag Name:<name>)")
+def start_instances(project, name):
     "Start EC2 instances"
-    instances = filter_instances(project)
+    instances = filter_instances(project, name)
 
     for i in instances:
         print("Starting {0}...".format(i.id))
@@ -129,9 +144,10 @@ def start_instances(project):
 
 @instances.command('snapshot')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
-def creates_snapshots(project):
+@click.option('--name', default=None, help="Only volumes for name (tag Name:<name>)")
+def creates_snapshots(project, name):
     "Creates snapshots for EC2 instances"
-    instances = filter_instances(project)
+    instances = filter_instances(project, name)
     for i in instances:
         print("Stopping {0}...".format(i.id))
         i.stop()
