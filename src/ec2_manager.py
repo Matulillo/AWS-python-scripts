@@ -46,7 +46,7 @@ def volumes():
 def list_volumes(project, name):
     "List EC2 volumes"
     instances = filter_instances(project,name)
-   
+
     for i in instances:
         for v in i.volumes.all():
             print(", ".join((
@@ -56,7 +56,7 @@ def list_volumes(project, name):
             str(v.size) + "GiB",
             v.encrypted and "Encrypted" or "Not Encrypted"
             )))
-    return 
+    return
 #-------------------------------------------------------------------------------------------------
 
 @cli.group('snapshots')
@@ -82,7 +82,7 @@ def list_snapshots(project, name, list_all):
                 s.start_time.strftime("%c")
                 )))
                 if s.state == 'completed' and not list_all: break
-    return 
+    return
 #-------------------------------------------------------------------------------------------------
 
 @cli.group('instances')
@@ -104,10 +104,11 @@ def list_instances(project, name):
             i.state['Name'],
             tags.get('Project', '<no project>'),
             tags.get('Name'),
-            str(i.public_ip_address)
+            str(i.public_ip_address),
+            str(i.private_ip_address)
             )))
 
-    return 
+    return
 
 @instances.command('stop')
 @click.option('--project', default=None, help="Only instances for project (tag Project:<name>)")
@@ -138,7 +139,7 @@ def start_instances(project, name):
         except botocore.exceptions.ClientError as e:
             print("Could not start {0}. ".format(i.id) + str(e))
             continue
-        
+
     return
 
 
@@ -162,7 +163,7 @@ def creates_snapshots(project, name):
         i.start()
         i.wait_until_running()
     print('Job done!!')
-    return 
+    return
 
 if __name__ == '__main__':
     cli()
